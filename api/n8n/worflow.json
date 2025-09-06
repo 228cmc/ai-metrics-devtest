@@ -1,0 +1,65 @@
+{
+  "name": "Ingest Ads CSV -> DuckDB with lineage",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": { "item": [{ "mode": "everyDay", "hour": 6, "minute": 0 }] }
+      },
+      "id": "Cron",
+      "name": "Cron Daily 06:00",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [200, 200]
+    },
+    {
+      "parameters": {
+        "url": "https://drive.google.com/uc?export=download&id=1RXj_3txgmyX2Wyt9ZwM7l4axfi5A6EC-",
+        "responseFormat": "file",
+        "download": true
+      },
+      "id": "Http",
+      "name": "HTTP Download CSV",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [420, 200]
+    },
+    {
+      "parameters": {
+        "fileName": "data/ads_spend.csv",
+        "options": { "createDirectories": true }
+      },
+      "id": "WriteFile",
+      "name": "Write Binary File",
+      "type": "n8n-nodes-base.writeBinaryFile",
+      "typeVersion": 1,
+      "position": [640, 200]
+    },
+    {
+      "parameters": {
+        "command": "duckdb db/ads.duckdb -c \".read db/ingest.sql\""
+      },
+      "id": "ExecIngest",
+      "name": "Execute Command (DuckDB Ingest)",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [860, 200]
+    },
+    {
+      "parameters": {
+        "command": "duckdb db/ads.duckdb -c \".read db/models.sql\""
+      },
+      "id": "ExecModels",
+      "name": "Execute Command (Models)",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [1080, 200]
+    }
+  ],
+  "connections": {
+    "Cron Daily 06:00": { "main": [[{ "node": "HTTP Download CSV", "type": "main", "index": 0 }]] },
+    "HTTP Download CSV": { "main": [[{ "node": "Write Binary File", "type": "main", "index": 0 }]] },
+    "Write Binary File": { "main": [[{ "node": "Execute Command (DuckDB Ingest)", "type": "main", "index": 0 }]] },
+    "Execute Command (DuckDB Ingest)": { "main": [[{ "node": "Execute Command (Models)", "type": "main", "index": 0 }]] }
+  },
+  "active": false
+}
