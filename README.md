@@ -1,3 +1,6 @@
+### `README.md`
+
+````markdown
 # AI Data Engineer DevTest
 
 This repo shows a simple pipeline for ingesting ad spend data, modeling KPIs, and exposing them to analysts.
@@ -53,7 +56,7 @@ This repo shows a simple pipeline for ingesting ad spend data, modeling KPIs, an
    make api
    ```
 
-   Test it:
+   Test endpoint:
 
    ```bash
    curl "http://localhost:8000/metrics?start=2025-07-01&end=2025-07-30"
@@ -64,6 +67,8 @@ This repo shows a simple pipeline for ingesting ad spend data, modeling KPIs, an
    ```bash
    python agent/demo.py
    ```
+
+---
 
 ## Repo structure
 
@@ -77,11 +82,28 @@ ai-metrics-devtest/
 └─ Makefile           # helper commands
 ```
 
-## Notes
+---
 
-* Provenance tracked with `load_date` and `source_file_name`
-* Revenue assumption: `revenue = conversions * 100`
-* KPIs:
+## What each part is (simple)
 
-  * CAC = spend / conversions
-  * ROAS = revenue / spend
+* **DuckDB**: a small database stored in one file. Like SQLite, but made for analytics.
+* **n8n**: a workflow automation tool. It runs steps every day: download → save → run SQL.
+* **CSV**: plain text file with ad spend data (spend, clicks, conversions, etc.).
+* **SQL**: the language to clean, transform, and calculate metrics in the database.
+* **CAC**: Customer Acquisition Cost = spend ÷ conversions.
+* **ROAS**: Return on Ad Spend = revenue ÷ spend (here revenue = conversions × 100).
+* **FastAPI**: a Python library to expose results as an API endpoint.
+* **Agent demo**: a small script that takes a natural language question and runs the right SQL query.
+* **Makefile**: shortcuts to run commands easily (e.g. `make ingest`, `make api`).
+
+---
+
+## Summary
+
+* **n8n** automates ingestion daily.
+* **DuckDB + SQL** store data and calculate KPIs.
+* **FastAPI** makes metrics accessible in JSON.
+* **Agent demo** shows how to answer questions in natural language.
+
+```
+

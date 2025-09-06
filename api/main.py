@@ -1,11 +1,11 @@
-# FastAPI service exposing metrics
+# FastAPI app that exposes KPIs through /metrics endpoint
 from fastapi import FastAPI, HTTPException, Query
 import duckdb
 
 app = FastAPI(title="Metrics API", version="1.0")
 DB_PATH = "db/ads.duckdb"
 
-# Query template with parameters
+# SQL query template with start and end dates as parameters
 Q = """
 WITH rng AS (SELECT ?::DATE AS start_d, ?::DATE AS end_d)
 SELECT
@@ -18,15 +18,18 @@ FROM kpi_daily, rng
 WHERE date BETWEEN rng.start_d AND rng.end_d;
 """
 
+
+#endpoint metrics  returns the kpi 
 @app.get("/metrics")
 def metrics(start: str = Query(...), end: str = Query(...)):
-    # Connect to DuckDB and execute query
+    # Connect to DuckDB and run the query
     try:
         with duckdb.connect(DB_PATH, read_only=True) as con:
             row = con.execute(Q, [start, end]).fetchone()
             if not row:
                 raise HTTPException(status_code=404, detail="No data")
             spend, conversions, revenue, cac, roas = row
+            # Return JSON response with KPIs
             return {
                 "start": start,
                 "end": end,

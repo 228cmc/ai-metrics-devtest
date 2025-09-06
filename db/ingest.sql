@@ -1,4 +1,4 @@
-# Create raw table if not exists
+# Here we create the raw table if it does not exist yet
 CREATE TABLE IF NOT EXISTS ads_spend_raw (
   date DATE,
   platform VARCHAR,
@@ -14,10 +14,10 @@ CREATE TABLE IF NOT EXISTS ads_spend_raw (
   source_file_name VARCHAR
 );
 
-# Enable parallelism in DuckDB
+# Allow multiple threads for ingestion
 PRAGMA threads=4;
 
-# Stage view reading the CSV
+# Here we create a temporary view reading the CSV
 CREATE OR REPLACE TEMP VIEW _stg_ads AS
 SELECT
   try_cast(date AS DATE) AS date,
@@ -32,7 +32,7 @@ SELECT
   try_cast(conversions AS BIGINT) AS conversions
 FROM read_csv_auto('data/ads_spend.csv', header=true, dateformat='%Y-%m-%d');
 
-# Delete matching rows before inserting (upsert style)
+# Here we delete duplicates using business keys before inserting
 DELETE FROM ads_spend_raw
 USING _stg_ads s
 WHERE ads_spend_raw.date = s.date
@@ -42,7 +42,7 @@ WHERE ads_spend_raw.date = s.date
   AND coalesce(ads_spend_raw.country,'')   = coalesce(s.country,'')
   AND coalesce(ads_spend_raw.device,'')    = coalesce(s.device,'');
 
-# Insert new rows with lineage metadata
+# Here we insert new rows and add lineage fields
 INSERT INTO ads_spend_raw
 SELECT
   date, platform, account, campaign, country, device,

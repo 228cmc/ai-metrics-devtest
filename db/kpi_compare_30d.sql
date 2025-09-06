@@ -1,8 +1,9 @@
-# Get max available date
+# Here we get the latest available date in the dataset
 WITH bounds AS (
   SELECT max(date) AS max_d FROM kpi_daily
 ),
-# Define ranges for last 30d and prior 30d
+
+# Here we define the ranges for last 30 days and prior 30 days
 ranges AS (
   SELECT
     date_trunc('day', max_d) AS ref_day,
@@ -12,7 +13,8 @@ ranges AS (
     (date_trunc('day', max_d) - INTERVAL 30 DAY) AS p30_end
   FROM bounds
 ),
-# Aggregate KPIs per period
+
+# Here we aggregate totals for each period
 agg AS (
   SELECT
     'last_30d' AS period,
@@ -30,7 +32,8 @@ agg AS (
   FROM kpi_daily, ranges
   WHERE date BETWEEN ranges.p30_start AND ranges.p30_end
 ),
-# Compute CAC and ROAS for each period
+
+# Here we calculate CAC and ROAS for each period
 kpi AS (
   SELECT
     period,
@@ -41,7 +44,8 @@ kpi AS (
     CASE WHEN spend=0 THEN NULL ELSE revenue/spend END AS roas
   FROM agg
 ),
-# Pivot to compare side by side
+
+# Here we pivot results to compare periods side by side
 pivot AS (
   SELECT
     max(CASE WHEN period='last_30d'  THEN cac END)  AS cac_l30,
@@ -56,7 +60,8 @@ pivot AS (
     max(CASE WHEN period='prior_30d' THEN revenue END) AS rev_p30
   FROM kpi
 )
-# Final select with deltas
+
+# Here we return the final comparison with percentage deltas
 SELECT
   spend_l30, spend_p30,
   conv_l30, conv_p30,
